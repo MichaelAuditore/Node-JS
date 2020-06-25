@@ -1,4 +1,4 @@
-CLI (npm)
+###CLI (npm)
 
     location - /cli
     commands
@@ -14,7 +14,7 @@ Some things to take in count, to test my proyect
 
 Probably some modules are missing, you need to install it manually
 
-API (async code)
+###API (async code)
 
     location - /api
     commands
@@ -29,7 +29,7 @@ Some things to take in count, to test my proyect:
 
 I did refactor to the sync file reading code to be async with a callback, promise, or async await to prevent the server from crashing when an assets is not found. Instead,to respond with a 404 status code, and creation of some sort of router logic to handle incoming requests for assets
 
-Debugging & Testing
+###Debugging & Testing
 
     location - /testing
     commands
