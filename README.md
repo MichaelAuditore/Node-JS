@@ -1,4 +1,4 @@
-CLI (npm)
+### CLI (npm)
 
     location - /cli
     commands
@@ -14,7 +14,7 @@ Some things to take in count, to test my proyect
 
 Probably some modules are missing, you need to install it manually
 
-API (async code)
+### API (async code)
 
     location - /api
     commands
@@ -22,15 +22,14 @@ API (async code)
 
 Creating and refactoring a simple static asset server. I have some assets and routes to get a functional view in browser.
 
-Some things to take in count, to test my proyect
+Some things to take in count, to test my proyect:
 
     install all remote modules (hint: use npm)
     check the README on how to run your server
-    refactor the sync file reading code to be async with a callback, promise, or async await
-    prevent the server from crashing when an assets is not found. Instead, respond with a 404 status code
-    create some sort of router logic to handle incoming requests for assets
 
-Debugging & Testing
+I did refactor to the sync file reading code to be async with a callback, promise, or async await to prevent the server from crashing when an assets is not found. Instead,to respond with a 404 status code, and creation of some sort of router logic to handle incoming requests for assets
+
+### Debugging & Testing
 
     location - /testing
     commands
