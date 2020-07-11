@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-
+const util = require("util");
 const fs = require("fs");
 const path = require("path");
+const through = require("through2");
 
 const args = require('minimist')(process.argv.slice(2), {
-    boolean: ['help'],
+    boolean: ['help', 'buffer', 'upper', 'reverse', 'in'],
     string: ['file'],
-    boolean: ['buffer'],
-    boolean: ['upper'],
-    boolean: ['reverse'],
     alias: {
         h: 'help',
         f: 'file',
@@ -43,46 +41,82 @@ function showHelp() {
     console.log("----------------------");
     console.log("    displays file's info");
     console.log("----------------------");
+    console.log(" cli.js     --in, -");
+    console.log("----------------------");
+    console.log("    process Data from stdin and displays in stdout");
+    console.log("----------------------");
 }
 
 /**
  * showInfoInsideFile - displays specific file's info
  * @param {string} filename 
  */
-function showInfoInsideFile(filename, upper = false, reverse = false, buffer = false) {
-    fs.readFile(path.join(__dirname, filename), (err, data) => {
-        if (err) { showFileError(); return; }
-        data = data.toString();
-        if (upper) { data = data.toUpperCase(); }
-        if (reverse) { data = data.split("").reverse().join(""); }
-        if (buffer) { data = Buffer.from(data); }
-
-        console.log(data);
-    });
-
+function showInfoInsideFile(filename) {
+    const content = fs.createReadStream(path.join(__dirname, filename));
+    processFile(content);
+}
+/**
+ * error - displays an error when a command is invalid
+ * @param {string} msg 
+ * @param {boolean} help 
+ */
+function error(msg, help = false) {
+    console.log(msg);
+    if (help) { showHelp(); }
 }
 
 /**
- * showFileError - displays an error when a file doesn't exists
+ * toUpper - converts by chunks to uppercase
+ * @param {*} buffer 
+ * @param {*} enc 
+ * @param {*} cb 
  */
-function showFileError() {
-    console.log("You're given a file doesn't exists");
+function toUpper(buffer, enc, cb) {
+    this.push(buffer.toString().toUpperCase());
+    cb();
 }
 
 /**
- * showError - displays an error when a command is invalid
+ * toBuffer - print by chunks to stdout using console.log
+ * @param {*} buffer 
+ * @param {*} enc 
+ * @param {*} cb 
  */
-function showError() {
-    console.log("Command Invalid");
-    showHelp();
+function toBuffer(buffer, enc, cb) {
+    this.push(console.log(buffer));
+    cb();
+}
+
+/**
+ * toReverse - reads by chunks and reverse each one to prepare the new string will be printed to stdout
+ * @param {*} buffer 
+ * @param {*} enc 
+ * @param {*} cb 
+ */
+function toReverse(buffer, enc, cb) {
+    this.push(buffer.reverse());
+    cb();
+}
+
+/**
+ * processFile - prints content to stdout
+ * @param {string} contents 
+ */
+function processFile(contents) {
+    if (args.upper) { contents = contents.pipe(through(toUpper)) }
+    if (args.buffer) { contents.pipe(through(toBuffer)); return; }
+    if (args.reverse) { contents = contents.pipe(through(toReverse)); }
+    contents.pipe(process.stdout);
 }
 
 if (args.file) {
-    showInfoInsideFile(args.file, args.upper, args.reverse, args.buffer);
+    showInfoInsideFile(args.file);
 } else if (args.help) {
     showHelp();
 } else if (args.upper || args.reverse || args.buffer && !args.file) {
-    showFileError();
+    error("You're given a file doesn't exists");
+} else if (args.in || args._.includes('-')) {
+    processFile(process.stdin);
 } else {
-    showError();
+    error("Command Invalid", true);
 }
