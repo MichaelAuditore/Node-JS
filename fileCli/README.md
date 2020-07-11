@@ -32,6 +32,18 @@ also you can manipulate the data to get some changes of file's info
     cli.js --file='filename' --file 'filename' --f 'filename' -f 'filename'
     ----------------------    displays file's info   ----------------------
 
+    cli.js --out -o
+    ----------------------    process stdout   ----------------------
+
+    cli.js --in -i
+    ----------------------    process stdin   ----------------------
+
+    cli.js --compress -c
+    ----------------------    gzip the output   ----------------------
+
+    cli.js --uncompress -d
+    ----------------------    un-gzip the input   ----------------------
+
 ### Author
 
 Created by **Miguel Angel Parada Cañon**

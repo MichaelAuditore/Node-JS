@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-const util = require("util");
 const fs = require("fs");
 const path = require("path");
 const through = require("through2");
+const zlib = require("zlib");
 
 const args = require('minimist')(process.argv.slice(2), {
-    boolean: ['help', 'buffer', 'upper', 'reverse', 'in'],
+    boolean: ['help', 'buffer', 'upper', 'reverse', 'in', 'out', 'compress', 'uncompress'],
     string: ['file'],
     alias: {
         h: 'help',
@@ -13,8 +13,15 @@ const args = require('minimist')(process.argv.slice(2), {
         b: 'buffer',
         u: 'upper',
         r: 'reverse',
+        i: 'in',
+        o: 'out',
+        c: 'compress',
+        d: 'uncompress'
     },
 });
+
+const BASE_PATH = path.resolve(__dirname || process.env.BASE_PATH);
+let OUTFILE = path.join(BASE_PATH, "out.txt");
 
 /**
  * showHelp - displays a list of commands used to get some info
@@ -41,9 +48,21 @@ function showHelp() {
     console.log("----------------------");
     console.log("    displays file's info");
     console.log("----------------------");
-    console.log(" cli.js     --in, -");
+    console.log(" cli.js     --in, -, -i");
     console.log("----------------------");
-    console.log("    process Data from stdin and displays in stdout");
+    console.log("    process stdin");
+    console.log("----------------------");
+    console.log(" cli.js     --out, -o");
+    console.log("----------------------");
+    console.log("    process stdout");
+    console.log("----------------------");
+    console.log(" cli.js     --compress, -c");
+    console.log("----------------------");
+    console.log("    gzip the output");
+    console.log("----------------------");
+    console.log(" cli.js     --uncompress, -d");
+    console.log("----------------------");
+    console.log("    un-gzip the input");
     console.log("----------------------");
 }
 
@@ -103,10 +122,29 @@ function toReverse(buffer, enc, cb) {
  * @param {string} contents 
  */
 function processFile(contents) {
+    let targetStream;
+
+    if (args.uncompress) {
+        let gunzipStream = zlib.createGunzip();
+        contents = contents.pipe(gunzipStream);
+    }
+
     if (args.upper) { contents = contents.pipe(through(toUpper)) }
     if (args.buffer) { contents.pipe(through(toBuffer)); return; }
     if (args.reverse) { contents = contents.pipe(through(toReverse)); }
-    contents.pipe(process.stdout);
+
+    if (args.compress) {
+        let gzipStream = zlib.createGzip();
+        contents = contents.pipe(gzipStream);
+        OUTFILE = `${OUTFILE}.gz`;
+    }
+
+    if (args.out) {
+        targetStream = process.stdout;
+    } else {
+        targetStream = fs.createWriteStream(OUTFILE);
+    }
+    contents.pipe(targetStream);
 }
 
 if (args.file) {
