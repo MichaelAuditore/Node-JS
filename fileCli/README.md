@@ -5,7 +5,7 @@ also you can manipulate the data to get some changes of file's info
 ### Installation
 
     use this command to get the necessary files to use it
-      `git clone https://github.com/MichaelAuditore/Node-JS/fileCli`
+      `git clone https://github.com/MichaelAuditore/Node-JS`
 
     Use `npm install` inside the directory fileCli to get all dependencies and avoid errors
 
