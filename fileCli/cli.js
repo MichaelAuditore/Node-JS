@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const through = require("through2");
 const zlib = require("zlib");
+const CAF = require("caf");
 
 const args = require('minimist')(process.argv.slice(2), {
     boolean: ['help', 'buffer', 'upper', 'reverse', 'in', 'out', 'compress', 'uncompress'],
@@ -20,8 +21,21 @@ const args = require('minimist')(process.argv.slice(2), {
     },
 });
 
+
+processFile = CAF(processFile);
+
 const BASE_PATH = path.resolve(__dirname || process.env.BASE_PATH);
 let OUTFILE = path.join(BASE_PATH, "out.txt");
+
+/**
+ * streamComplete - promise to return when processFile function was executed correctly
+ * @param {*} stream 
+ */
+function streamComplete(stream) {
+    return new Promise(function c(res) {
+        stream.on("end", res);
+    });
+}
 
 /**
  * showHelp - displays a list of commands used to get some info
@@ -66,14 +80,6 @@ function showHelp() {
     console.log("----------------------");
 }
 
-/**
- * showInfoInsideFile - displays specific file's info
- * @param {string} filename 
- */
-function showInfoInsideFile(filename) {
-    const content = fs.createReadStream(path.join(__dirname, filename));
-    processFile(content);
-}
 /**
  * error - displays an error when a command is invalid
  * @param {string} msg 
@@ -121,8 +127,10 @@ function toReverse(buffer, enc, cb) {
  * processFile - prints content to stdout
  * @param {string} contents 
  */
-function processFile(contents) {
+function* processFile(signal, contents) {
     let targetStream;
+
+
 
     if (args.uncompress) {
         let gunzipStream = zlib.createGunzip();
@@ -145,16 +153,32 @@ function processFile(contents) {
         targetStream = fs.createWriteStream(OUTFILE);
     }
     contents.pipe(targetStream);
+
+    signal.pr.catch(() => {
+        contents.unpipe(targetStream);
+        contents.destroy();
+    })
+
+    yield streamComplete(contents);
 }
 
 if (args.file) {
-    showInfoInsideFile(args.file);
+    const content = fs.createReadStream(path.join(BASE_PATH, args.file));
+
+    let cancelationToken = CAF.timeout(10, "Took too long!");
+    processFile(cancelationToken, content)
+        .then(() => {
+            console.log("\nComplete!");
+        })
+        .catch(error);
 } else if (args.help) {
     showHelp();
 } else if (args.upper || args.reverse || args.buffer && !args.file) {
     error("You're given a file doesn't exists");
 } else if (args.in || args._.includes('-')) {
-    processFile(process.stdin);
+    let cancelationToken = CAF.timeout(10, "Took too long!");
+    processFile(cancelationToken, process.stdin)
+        .catch(error);
 } else {
     error("Command Invalid", true);
 }

@@ -9,6 +9,14 @@ also you can manipulate the data to get some changes of file's info
 
     Use `npm install` inside the directory fileCli to get all dependencies and avoid errors
 
+### Node Modules
+
+    Currently installed:
+
+    CAF - Cancellation Async Flows
+    through2 - Transform functions for streams
+    minimist - parse argument options
+
 ### Using
 
     you should start using the command line with some of these commands:
